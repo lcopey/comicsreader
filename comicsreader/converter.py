@@ -1,6 +1,7 @@
 """This module contains basically function to convert cbr and pdf to cbz format."""
 
 import os
+import shutil
 import typing
 
 from pyunpack import Archive
@@ -9,6 +10,7 @@ from zipfile import ZipFile
 from PIL import Image
 import logging
 from typing import Optional, List
+from .utils import extensions_check
 
 if typing.TYPE_CHECKING:
     from PyPDF4.pdf import PageObject
@@ -75,33 +77,16 @@ def _extract_image_from_pdf_page(page: 'PageObject', tmp_path: Optional[str] = '
 
 
 def _create_cbz_from_tmp_path(out_path, tmp_path):
-    with ZipFile(out_path, 'w') as zip_obj:
-        for file in os.listdir(tmp_path):
-            file_path = os.path.join(tmp_path, file)
-            if os.path.isfile(file_path):
-                zip_obj.write(file_path)
-                log.debug(f'Write {file} into {out_path}')
-                # os.remove(file_path)
+    basename, _ = os.path.splitext(out_path)
+    shutil.make_archive(base_name=basename, format='zip', root_dir=tmp_path)
+    os.rename(basename + '.zip', out_path)
 
-    # Remove tmp subpath
-    _clean_directory(tmp_path)
+    shutil.rmtree(tmp_path)
 
 
-def _clean_directory(path):
-    items = os.listdir(path)
-    if len(items) > 0:
-        for item in items:
-            subpath = os.path.join(path, item)
-            if os.path.isfile(subpath):
-                os.remove(subpath)
-            else:
-                _clean_directory(subpath)
-                os.rmdir(subpath)
-
-
-def _setup_conversion(file: str, out_path: str, extensions_check: List[str], tmp_path: Optional[str] = './tmp') -> str:
-    ext = file.split('.')[-1]
-    assert ext in extensions_check, f'file should be one of {extensions_check}, got {ext}.'
+def _setup_conversion(file: str, out_path: str, allowed_extensions: List[str],
+                      tmp_path: Optional[str] = './tmp') -> str:
+    extensions_check(file_path=file, allowed_extensions=allowed_extensions)
 
     in_filename = os.path.basename(file)
     in_dirname = os.path.dirname(file)
@@ -112,10 +97,9 @@ def _setup_conversion(file: str, out_path: str, extensions_check: List[str], tmp
     log.debug(f'Convert {file} to {out_filepath}')
 
     # Create temp subpath
-    if not os.path.exists(tmp_path):
-        os.makedirs(tmp_path)
-
-    _clean_directory(tmp_path)
+    if os.path.exists(tmp_path):
+        shutil.rmtree(tmp_path)
+    os.makedirs(tmp_path)
 
     return out_filepath
 
@@ -138,7 +122,7 @@ def pdf2cbz(pdf_file: str, out_path: Optional[str] = None, tmp_path: Optional[st
     -------
 
     """
-    out_filepath = _setup_conversion(pdf_file, out_path=out_path, tmp_path=tmp_path, extensions_check=['pdf'])
+    out_filepath = _setup_conversion(pdf_file, out_path=out_path, tmp_path=tmp_path, allowed_extensions=['pdf'])
 
     # Extract pdf file into temp folder
     log.debug(f'Extract {pdf_file} into {tmp_path}')
@@ -173,7 +157,8 @@ def cbr2cbz(cbr_file: str, out_path: Optional[str] = None, tmp_path: Optional[st
     -------
 
     """
-    out_filepath = _setup_conversion(cbr_file, out_path=out_path, tmp_path=tmp_path, extensions_check=['cbr', 'rar'])
+    out_filepath = _setup_conversion(cbr_file, out_path=out_path, tmp_path=tmp_path,
+                                     allowed_extensions=['.cbr', '.rar'])
 
     # Extract cbr/rar file into temp file
     log.debug(f'Extract {cbr_file} into {tmp_path}')

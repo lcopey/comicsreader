@@ -17,9 +17,43 @@ console_handler.setFormatter(console_Formatter)
 LOGGER.addHandler(console_handler)
 LOGGER.setLevel(logging.DEBUG)
 
-BASE_DIR = 'D:/Mes bds'
+BASE_DIR = 'E:/comics_database/'
 
 app = Flask(__name__)
+
+
+def has_thumbnail(path) -> bool:
+    return os.path.exists(os.path.join(path, '.thumbnail'))
+
+
+def retrieve_thumbnail_for_file(path, file):
+    basename, _ = os.path.splitext(file)
+    thumbnail_path = os.path.join(path, '.thumbnail', basename + '.jpg')
+    if os.path.exists(thumbnail_path):
+        return thumbnail_path
+    else:
+        return False
+
+
+def browse_folder(path: str):
+    items = []
+    for file in os.listdir(path):
+        file_path = os.path.join(path, file)
+        item = None
+
+        if file.endswith('.cbz'):
+            item = {'file': file}
+            thumbnail_path = retrieve_thumbnail_for_file(path, file)
+            if thumbnail_path:
+                item['thumbnail'] = thumbnail_path
+
+        elif os.path.isdir(file_path):
+            item = {'file': file}
+
+        if item:
+            items.append(item)
+
+    return items
 
 
 @app.route('/', defaults={'subpath': ''})
@@ -39,8 +73,8 @@ def root(subpath):
         return send_file(abs_path)
 
     else:
-        files = os.listdir(abs_path)
-        return render_template('files.html', files=files)
+        items = browse_folder(abs_path)
+        return render_template('files_thumbnail.html', items=items)
 
 
 if __name__ == '__main__':
