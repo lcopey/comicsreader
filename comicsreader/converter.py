@@ -83,7 +83,7 @@ def _create_cbz_from_tmp_path(out_path, tmp_path):
                 log.debug(f'Write {file} into {out_path}')
                 # os.remove(file_path)
 
-    # Remove tmp path
+    # Remove tmp subpath
     _clean_directory(tmp_path)
 
 
@@ -111,7 +111,7 @@ def _setup_conversion(file: str, out_path: str, extensions_check: List[str], tmp
     out_filepath = _get_filepath(in_filename, path=out_path, extension='.cbz', make_dir=False)
     log.debug(f'Convert {file} to {out_filepath}')
 
-    # Create temp path
+    # Create temp subpath
     if not os.path.exists(tmp_path):
         os.makedirs(tmp_path)
 
@@ -128,9 +128,9 @@ def pdf2cbz(pdf_file: str, out_path: Optional[str] = None, tmp_path: Optional[st
     Parameters
     ----------
     pdf_file : str
-        path of the file to convert. It must have .cbr or .rar extension.
+        subpath of the file to convert. It must have .cbr or .rar extension.
     out_path : Optional[str]
-        optionally specify the output path
+        optionally specify the output subpath
     tmp_path: Optional[str]
         optionnally specify the temporary directory where to store images
 
@@ -163,9 +163,9 @@ def cbr2cbz(cbr_file: str, out_path: Optional[str] = None, tmp_path: Optional[st
     Parameters
     ----------
     cbr_file : str
-        path of the file to convert. It must have .cbr or .rar extension.
+        subpath of the file to convert. It must have .cbr or .rar extension.
     out_path : Optional[str]
-        optionally specify the output path
+        optionally specify the output subpath
     tmp_path: Optional[str]
         optionnally specify the temporary directory where to store images
 
