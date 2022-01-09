@@ -7,8 +7,10 @@
 # async def root():
 #     return {'message': "Hello World"}
 import os
-from flask import Flask, render_template, abort, send_file
 import logging
+from flask import Flask, render_template, abort, send_file
+
+from typing import List, Dict
 
 LOGGER = logging.getLogger()
 console_handler = logging.StreamHandler()
@@ -19,7 +21,7 @@ LOGGER.setLevel(logging.DEBUG)
 
 BASE_DIR = 'E:/comics_database/'
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=BASE_DIR)
 
 
 def has_thumbnail(path) -> bool:
@@ -28,30 +30,53 @@ def has_thumbnail(path) -> bool:
 
 def retrieve_thumbnail_for_file(path, file):
     basename, _ = os.path.splitext(file)
-    thumbnail_path = os.path.join(path, '.thumbnail', basename + '.jpg')
-    if os.path.exists(thumbnail_path):
+    relpath = os.path.relpath(path, BASE_DIR)
+    thumbnail_path = os.path.join(relpath, '.thumbnail', basename + '.jpg')
+
+    # LOGGER.debug(f'Thumbnail requested path : {thumbnail_path}')
+    if os.path.exists(os.path.join(BASE_DIR, thumbnail_path)):
         return thumbnail_path
     else:
         return False
 
 
-def browse_folder(path: str):
-    items = []
+def browse_folder(path: str) -> List[Dict[str, str]]:
+    """List path directory. This method is equivalent to listdir except that it returns a list of dictionary with keys
+    file and thumbnail.
+
+    Parameters
+    ----------
+    path: str
+        path to browse, absolute
+
+    Returns
+    -------
+    List[Dict[str, str]]
+    List of dictionaries with keys file and thumbnail.
+
+    """
+    base_path, _ = os.path.split(path)
+    base_path = os.path.relpath(base_path, BASE_DIR)
+
+    items = [{'url': base_path, 'label': '..'}]
     for file in os.listdir(path):
         file_path = os.path.join(path, file)
+        url = os.path.relpath(file_path, BASE_DIR)
         item = None
 
         if file.endswith('.cbz'):
-            item = {'file': file}
+            item = {'url': url, 'label': file}
             thumbnail_path = retrieve_thumbnail_for_file(path, file)
             if thumbnail_path:
                 item['thumbnail'] = thumbnail_path
 
-        elif os.path.isdir(file_path):
-            item = {'file': file}
+        elif os.path.isdir(file_path) and '.thumbnail' not in file_path:
+            item = {'url': url, 'label': file}
 
         if item:
             items.append(item)
+
+    LOGGER.debug(f'[Browse folder] {path} : {items.__str__()}')
 
     return items
 
@@ -59,8 +84,7 @@ def browse_folder(path: str):
 @app.route('/', defaults={'subpath': ''})
 @app.route('/<path:subpath>')
 def root(subpath):
-    # TODO Handle recursive browsing directory ?
-    LOGGER.debug(f'Requested subpath : {subpath}')
+    LOGGER.debug(f'[ROUTE] Requested subpath : {subpath}')
     abs_path = os.path.join(BASE_DIR, subpath)
 
     # Return 404 if subpath doesn't exist
@@ -69,7 +93,6 @@ def root(subpath):
 
     # Check if subpath is a file and serve
     elif os.path.isfile(abs_path):
-        LOGGER.debug(f'{abs_path} requested')
         return send_file(abs_path)
 
     else:

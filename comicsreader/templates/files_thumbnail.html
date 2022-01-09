@@ -8,9 +8,7 @@
 <ul>
     {% for item in items %}
     <li>
-        <a href="{{ (request.path + '/' if request.path != '/' else '') + item['file'] }}">
-            {{ (request.path + '/' if request.path != '/' else '') + item['file'] }}
-        </a>
+        <a href="{{ item['url'] }}">{{ item['label'] }}</a>
         {% if 'thumbnail' in item %}
             <img src="{{ item['thumbnail'] }}">
         {% endif %}
