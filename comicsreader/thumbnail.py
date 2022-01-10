@@ -42,13 +42,14 @@ def erase_thumbnail(root_path):
     ----------
     root_path: str
     """
-    for dirpath, dirnames, filenames in os.walk(root_path):
-        _, current_dir = os.path.split(dirpath)
-        if current_dir == '.thumbnail':
-            shutil.rmtree(dirpath)
+    # for dirpath, dirnames, filenames in os.walk(root_path):
+    #     _, current_dir = os.path.split(dirpath)
+    #     if current_dir == '.thumbnail':
+    #         shutil.rmtree(dirpath)
+    shutil.rmtree('./comicsreader/static/thumbnail')
 
 
-def build_thumbnail(root_path):
+def build_thumbnail(root_path, output_path='./comicsreader/static/thumbnail'):
     """Build the .thumbnail folder for each subfolder containing .cbz files
 
     Parameters
@@ -69,7 +70,10 @@ def build_thumbnail(root_path):
                 if img:
                     basename, _ = os.path.splitext(file)
                     # _, ext = os.path.splitext(zipped_filename)
-                    miniature_path = os.path.join(dirpath, '.thumbnail')
+                    # miniature_path = os.path.join(dirpath, '.thumbnail')
+                    miniature_path = os.path.relpath(dirpath, root_path)
+                    miniature_path = os.path.join(output_path, miniature_path)
+
                     miniature_file_path = os.path.join(miniature_path, basename + '.jpg')
 
                     # Save

@@ -6,14 +6,17 @@
 </head>
 <body>
 <ul>
-    {% for item in items %}
     <li>
-        <a href="{{ item['url'] }}">{{ item['label'] }}</a>
-        {% if 'thumbnail' in item %}
-            <img src="{{ item['thumbnail'] }}">
-        {% endif %}
+        {% for item in items %}
+            <a href="{{ item['url'] }}">
+                {% if 'thumbnail' in item %}
+                    <img src="{{ item['thumbnail'] }}">
+                {% else %}
+                    {{ item['label'] }}
+                {% endif %}
+            </a>
+        {% endfor %}
     </li>
-    {% endfor %}
 </ul>
 </body>
 </html>

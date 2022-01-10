@@ -12,7 +12,7 @@ from flask import Flask, render_template, abort, send_file
 
 from typing import List, Dict
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger(__name__)
 console_handler = logging.StreamHandler()
 console_Formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 console_handler.setFormatter(console_Formatter)
@@ -20,21 +20,19 @@ LOGGER.addHandler(console_handler)
 LOGGER.setLevel(logging.DEBUG)
 
 BASE_DIR = 'E:/comics_database/'
+STATIC_DIR = './static'
+THUMBNAILS_DIR = './static/thumbnail'
 
-app = Flask(__name__, static_folder=BASE_DIR)
-
-
-def has_thumbnail(path) -> bool:
-    return os.path.exists(os.path.join(path, '.thumbnail'))
+app = Flask(__name__, static_folder=STATIC_DIR)
 
 
 def retrieve_thumbnail_for_file(path, file):
     basename, _ = os.path.splitext(file)
     relpath = os.path.relpath(path, BASE_DIR)
-    thumbnail_path = os.path.join(relpath, '.thumbnail', basename + '.jpg')
+    thumbnail_path = os.path.join(THUMBNAILS_DIR, relpath, basename + '.jpg')
 
-    # LOGGER.debug(f'Thumbnail requested path : {thumbnail_path}')
-    if os.path.exists(os.path.join(BASE_DIR, thumbnail_path)):
+    LOGGER.debug(f'Thumbnail requested path : {thumbnail_path}')
+    if os.path.exists(thumbnail_path):
         return thumbnail_path
     else:
         return False
@@ -67,10 +65,11 @@ def browse_folder(path: str) -> List[Dict[str, str]]:
         if file.endswith('.cbz'):
             item = {'url': url, 'label': file}
             thumbnail_path = retrieve_thumbnail_for_file(path, file)
+            LOGGER.debug(f'Thumbnail path : {thumbnail_path}')
             if thumbnail_path:
                 item['thumbnail'] = thumbnail_path
 
-        elif os.path.isdir(file_path) and '.thumbnail' not in file_path:
+        elif os.path.isdir(file_path):
             item = {'url': url, 'label': file}
 
         if item:
@@ -101,4 +100,4 @@ def root(subpath):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
