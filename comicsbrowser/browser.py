@@ -12,18 +12,28 @@ from flask import Flask, render_template, abort, send_file
 
 from typing import List, Dict
 
-LOGGER = logging.getLogger(__name__)
-console_handler = logging.StreamHandler()
-console_Formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-console_handler.setFormatter(console_Formatter)
-LOGGER.addHandler(console_handler)
-LOGGER.setLevel(logging.DEBUG)
+
+def config_logger(app: Flask):
+    app.logger.setLevel(logging.DEBUG)
+    for h in app.logger.handlers:
+        app.logger.removeHandler(h)
+
+    console_handler = logging.StreamHandler()
+    console_Formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+    console_handler.setFormatter(console_Formatter)
+    console_handler.setLevel(logging.DEBUG)
+
+    app.logger.addHandler(console_handler)
+    app.logger.debug(f'[config_logger] - logger handlers : {app.logger.handlers}')
+    return app.logger
+
 
 BASE_DIR = 'E:/comics_database/'
-STATIC_DIR = './static'
-THUMBNAILS_DIR = './static/thumbnail'
+STATIC_DIR = './static/'
+THUMBNAILS_DIR = './static/thumbnail/'
 
 app = Flask(__name__, static_folder=STATIC_DIR)
+LOGGER = config_logger(app)
 
 
 def retrieve_thumbnail_for_file(path, file):
@@ -31,8 +41,9 @@ def retrieve_thumbnail_for_file(path, file):
     relpath = os.path.relpath(path, BASE_DIR)
     thumbnail_path = os.path.join(THUMBNAILS_DIR, relpath, basename + '.jpg')
 
-    LOGGER.debug(f'Thumbnail requested path : {thumbnail_path}')
-    if os.path.exists(thumbnail_path):
+    path_exists = os.path.exists(thumbnail_path)
+    LOGGER.debug(f'Thumbnail requested path : {thumbnail_path}, {path_exists}')
+    if path_exists:
         return thumbnail_path
     else:
         return False
@@ -56,21 +67,22 @@ def browse_folder(path: str) -> List[Dict[str, str]]:
     base_path, _ = os.path.split(path)
     base_path = os.path.relpath(base_path, BASE_DIR)
 
-    items = [{'url': base_path, 'label': '..'}]
+    items = [{'url': base_path, 'label': '', 'thumbnail': './static/icons/back.png'}]
     for file in os.listdir(path):
         file_path = os.path.join(path, file)
         url = os.path.relpath(file_path, BASE_DIR)
         item = None
 
         if file.endswith('.cbz'):
-            item = {'url': url, 'label': file}
-            thumbnail_path = retrieve_thumbnail_for_file(path, file)
-            LOGGER.debug(f'Thumbnail path : {thumbnail_path}')
-            if thumbnail_path:
-                item['thumbnail'] = thumbnail_path
+            label, _ = os.path.splitext(file)
+            item = {'url': url, 'label': label}
 
         elif os.path.isdir(file_path):
             item = {'url': url, 'label': file}
+
+        thumbnail_path = retrieve_thumbnail_for_file(path, file)
+        if thumbnail_path:
+            item['thumbnail'] = thumbnail_path
 
         if item:
             items.append(item)
@@ -96,8 +108,9 @@ def root(subpath):
 
     else:
         items = browse_folder(abs_path)
-        return render_template('files_thumbnail.html', items=items)
+        return render_template('browser.html', items=items)
 
 
 if __name__ == '__main__':
+    app.config.update(TEMPLATES_AUTO_RELOAD=True)
     app.run(debug=True)

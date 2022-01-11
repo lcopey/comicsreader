@@ -4,7 +4,7 @@
 
 import unittest
 import json
-from comicsreader.metaprocessor import TitleProcessor, MetaProcessor
+from comicsbrowser.metaprocessor import TitleProcessor, MetaProcessor
 
 
 class TestTitleProcessor(unittest.TestCase):

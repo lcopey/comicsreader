@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-"""Tests for `comicsreader` package."""
+"""Tests for `comicsbase` package."""
 
 
 import unittest
-# from comicsreader import comicsreader
+# from comicsbase import comicsbase
 
 
 class TestComicsreader(unittest.TestCase):
-    """Tests for `comicsreader` package."""
+    """Tests for `comicsbase` package."""
 
     def setUp(self):
         """Set up test fixtures, if any."""

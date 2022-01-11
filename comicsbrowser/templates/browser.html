@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="static/css/style.css">
+    <title>ComicsReader</title>
+</head>
+<body>
+<div>
+    {% set item = items.pop(0) %}
+    <a href="{{ item['url'] }}" class="comicsItem">
+        <img src="{{ item['thumbnail'] }}" class="center">
+    </a>
+</div>
+<div class="thumbnailContainer">
+    {% for item in items %}
+    <a href="{{ item['url'] }}" class="comicsItem">
+        {% if 'thumbnail' in item %}
+        <img src="{{ item['thumbnail'] }}" class="center">
+        {% endif %}
+        <p class="center">{{ item['label'] }}</p>
+    </a>
+    {% endfor %}
+</div>
+</body>
+</html>

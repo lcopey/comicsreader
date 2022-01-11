@@ -1,1 +1,1 @@
-"""Unit test package for comicsreader."""
+"""Unit test package for comicsbase."""

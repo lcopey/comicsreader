@@ -1,6 +1,6 @@
 import unittest
 import os
-from comicsreader.converter import cbr2cbz, pdf2cbz
+from comicsbrowser.converter import cbr2cbz, pdf2cbz
 
 
 class ConvertTestCase(unittest.TestCase):

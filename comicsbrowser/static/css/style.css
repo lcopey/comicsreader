@@ -1,0 +1,20 @@
+.center{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.thumbnailContainer{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+}
+.comicsItem {
+    margin: 1em;
+    display: grid;
+    align-content: center;
+}
+a.comicsItem {
+    text-decoration: none;
+    color: #202020;
+}
