@@ -8,7 +8,9 @@
 #     return {'message': "Hello World"}
 import os
 import logging
-from flask import Flask, render_template, abort, send_file
+import base64
+from flask import Flask, render_template, abort, send_file, url_for, redirect
+from comic import Comic
 
 from typing import List, Dict
 
@@ -28,11 +30,30 @@ def config_logger(app: Flask):
     return app.logger
 
 
+def get_path_relative_to_file(file: str, *args: str) -> str:
+    """Return path relative to file provided
+
+    Parameters
+    ----------
+    file : str
+        path to current file
+    args : str
+        additional path to join on
+
+    Returns
+    -------
+    str
+        path relative to file
+    """
+    return os.path.join(os.path.dirname(file), *args)
+
+
 BASE_DIR = 'E:/comics_database/'
 STATIC_DIR = './static/'
 THUMBNAILS_DIR = './static/thumbnail/'
 
 app = Flask(__name__, static_folder=STATIC_DIR)
+app.comics = {}
 LOGGER = config_logger(app)
 
 
@@ -92,6 +113,21 @@ def browse_folder(path: str) -> List[Dict[str, str]]:
     return items
 
 
+def open(file, keystore):
+    # comic = ZipFile(file)
+    comic = Comic(file)
+
+    # extract_path = os.path.join('./static/comic/', basename)
+    # comic.extractall(extract_path)
+    app.comics[keystore] = comic
+
+
+@app.route('/open/<path:file>/<int:page>')
+def comic_page(file, page):
+    img_data = base64.b64encode(app.comics[file].page(page)).decode('utf-8')
+    return render_template('reader.html', title=file, img_data=img_data)
+
+
 @app.route('/', defaults={'subpath': ''})
 @app.route('/<path:subpath>')
 def root(subpath):
@@ -104,7 +140,11 @@ def root(subpath):
 
     # Check if subpath is a file and serve
     elif os.path.isfile(abs_path):
-        return send_file(abs_path)
+        _, basename = os.path.split(abs_path)
+        basename, _ = os.path.splitext(basename)
+        open(abs_path, basename)
+
+        return redirect(url_for('comic_page', file=basename, page=0))
 
     else:
         items = browse_folder(abs_path)

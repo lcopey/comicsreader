@@ -18,3 +18,8 @@ a.comicsItem {
     text-decoration: none;
     color: #202020;
 }
+.picture {
+    height: auto;
+    width: 100%;
+    max-width: 100%;
+}
